@@ -355,7 +355,7 @@ ctrl.vm = {
     </script>
 </section>
 
-
+<!--
 <section>
     <h2>First page load</h2> 
     <p>
@@ -365,13 +365,13 @@ ctrl.vm = {
         Participant Client
         Participant Mithril
         Participant Server
-        Client-->Server: GET /todos
-        Server-->Client: HTML
+        Client->Server: GET /todos
+        Server->Client: HTML
         Note over Client: Render static HTML page\n (no UI events)
         Client->Mithril: Initialise module
         Mithril->Server: Data query
         Server->Mithril: Data result
-        Mithril-->Client: Render page with UI events and data
+        Mithril->Client: Render page with UI events and data
     </div>
 
 </section>
@@ -392,15 +392,16 @@ ctrl.vm = {
         Note over Mithril: Runs user.edit MVC component\non the client only
         Mithril-Server: Data query
         Server->Mithril: Data result
-        Mithril-->Client: Render the user edit page
+        Mithril->Client: Render the user edit page
     </div>
 
 </section>
+-->
 
 <section>
     <h2>This is only the beginning</h2> 
     <p>
-        Miso is still only young, get involved1 <a href="http://misojs.com" target="_blank">http://misojs.com</a>
+        Miso is still only young, get involved! <a href="http://misojs.com" target="_blank">http://misojs.com</a>
     </p>
 
     <p class="center mtop">
