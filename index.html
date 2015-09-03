@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Miso.js: Mithril ISOmorphic JavaScript framework</title>
+
+    <link rel="stylesheet" href="resource/revealjs/css/reveal.css">   
+    <link rel="stylesheet" href="resource/revealjs/css/theme/black.css" id="theme">
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="resource/revealjs/lib/css/zenburn.css">
+<!--
+    <script src="resource/knockout-3.2.0.js"></script>
+    <script src="resource/kotools.js"></script>
+-->
+    <script src="resource/jquery-1.11.2.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resource/syntaxify/prism.min.css">
+
+    <link rel="stylesheet" type="text/css" href="resource/prism.annotate/prism.annotate.css">
+
+
+    <script type="text/javascript" src="resource/syntaxify/prism.min.js" data-manual></script>
+
+    <script type="text/javascript" src="resource/prism.annotate/prism.annotate.js"></script>
+
+
+    <script type="text/javascript" src="resource/syntaxify/jquery.syntaxify.js"></script>
+
+
+    <!-- Web sequence diagrams -->
+    <script src="resource/js-sequence-diagrams/bower_components/raphael/raphael-min.js"></script>
+    <script src="resource/js-sequence-diagrams/bower_components/underscore/underscore-min.js"></script>
+    <script src="resource/js-sequence-diagrams/build/sequence-diagram-min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resource/custom.css">
+</head>
+
+<body>
+<div class="reveal">
+
+<div class="slides">
+
+<section>
+    <div id="logoContainer">
+        <img id="logo" src="resource/img/miso_logo_large.gif" />
+    <p class="mtop">
+        Miso is a full-stack, isomorphic, single page app with SEO working out of the box.
+    </p>
+    <p>
+        Miso allows you to develop apps quickly and easily - here I'm going to show you how to build a "todo" app in 5 minutes.
+    </p>
+    </div>
+</section>
+
+<section>
+    <h2>Anatomy of a miso app</h2>
+
+    <p>
+        A miso app is defined using MVC components.
+    </p>
+
+    <script id="misoTodo1" type="text/syntaxify">
+module.exports.index = {
+    models: {},
+    view: function() {
+        return "TODO";
+    },
+    controller: function() {
+        return this;
+    }
+};
+    </script>
+    <div data-syntaxify="#misoTodo1" data-syntaxify-language="javascript"
+        data-annotations="
+            1`We use node-style modules that work on express and in the browser with Browserify|
+            7`The controller must return 'this' so that miso can allow it to work isomorphically
+        ">
+    </div>
+
+</section>
+
+<section>
+    <h2>Models</h2>
+
+    <p>
+        Miso is able to define model structures as plain js functions containing mithril properties, for example:
+    </p>
+
+    <script id="misoTodo2" type="text/syntaxify">
+models: {
+    todo: function(data){
+        this.text = data.text;
+        this.done = m.prop(data.done);
+    }
+}
+    </script>
+    <div data-syntaxify="#misoTodo2" data-syntaxify-language="javascript"
+        data-annotations="
+            3`'text' is a plain string attribute, it simply contains a string|
+            4`The 'done' attribute is a mutable mithril property.
+        ">
+    </div>
+
+    <p>
+        Defining your models in this manner allows miso to use the model in Data APIs as we will see later. You can have multiple models in an MVC component.
+    </p>
+
+</section>
+
+<section>
+    <h2>Controller</h2>
+
+    <p>
+        Miso controllers are simply functions that return a pointer to <i>this</i>, for example:
+    </p>
+
+    <script id="misoTodo3" type="text/syntaxify">
+controller: function() {
+    var myTodos = [{text: "Learn miso"}, {text: "Build miso app"}];
+    this.list = Object.keys(myTodos).map(function(key) {
+        return new self.models.todo(myTodos[key]);
+    });
+    return this;
+}
+    </script>
+    <div data-syntaxify="#misoTodo3" data-syntaxify-language="javascript"
+        data-annotations="
+            3`Here we create a list of todo models mapped from our data
+        ">
+    </div>
+
+    <p>
+        Defining your controller in this manner allows miso to run in an isomorphic manner.
+    </p>
+
+</section>
+
+<section>
+    <h2>View</h2>
+
+    <p>
+        The view uses mithril tags to create a virtual DOM element representation of the HTML we want.
+    </p>
+
+    <script id="misoTodo4" type="text/syntaxify">
+view: function(ctrl) {
+    return DIV([
+        H1("Todos"),
+        UL([
+            ctrl.list.map(function(todo){
+                return LI(todo.text)
+            })
+        ])
+    ]);
+}
+    </script>
+    <div data-syntaxify="#misoTodo4" data-syntaxify-language="javascript">
+    </div>
+
+</section>
+
+<section>
+    <h2>Let's talk about data</h2>
+
+    <p>
+        In misojs data is accessed via a "Miso API"
+    </p>
+
+    <div class="diagram">
+        MVC component->Miso API: Request
+        Miso API-->Server API: JSONRPC 2.0 Request
+        Server API-->Miso API: JSONRPC 2.0 Response
+        Miso API->MVC component: Response
+    </div>
+
+    <p>
+        The requests and responses are made using JSON RPC 2.0 via ajax by default.
+    </p>
+
+</section>
+
+<section>
+    <h2>Miso API definition</h2>
+
+    <p>An API in miso is simply a method that receives a callback function, an error function and an arguments object</p>
+
+    <script id="misoTodo5" type="text/syntaxify">
+module.exports = function(utils){
+    return {
+        find: function(callback, error, args){
+            callback({"found": "something"});
+        }
+    };
+};
+    </script>
+    <div data-syntaxify="#misoTodo5" data-syntaxify-language="javascript"
+        data-annotations="
+            3`Here we create a 'find' method that the API can use, it will be automatically routed to /api/find|
+            4`The method simply calls back with whatever object we found
+            ">
+    </div>
+
+    <p>
+        Miso APIs are exposed at /api/[name], and are extendable and composable.
+    </p>
+</section>
+
+
+<section>
+    <h2>Using a built-in api</h2>
+
+    <p>
+        At the top of the program, we add a reference to the flatfiledb API:
+    </p>
+
+    <script id="misoTodo6" type="text/syntaxify">
+var db = require('misojs-flatfiledb-api')(m);
+    </script>
+    <div data-syntaxify="#misoTodo6" data-syntaxify-language="javascript">
+    </div>
+
+    <p>
+        Note: we pass in "m", which is the mithril instance we're using, so Miso can hook into the rendering engine.
+    </p>
+
+</section>
+
+
+<section>
+    <h2>Loading todos</h2>
+
+    <p>
+        Here we use the db API to load all todos.
+    </p>
+
+    <script id="misoTodo14" type="text/syntaxify">
+db.find({type: modelType}).then(function(data) {
+    ctrl.list = Object.keys(data.result).map(function(key) {
+        return new self.models.todo(data.result[key]);
+    });
+});
+    </script>
+    <div data-syntaxify="#misoTodo14" data-syntaxify-language="javascript"
+        data-annotations="
+        1`Using the flatfiledb API, we find all the todos|
+        3`This creates a new todo for each data result entry we get back from our find-query.
+        ">
+    </div>
+
+    <p>
+        The Miso db API implements a promise-like interface so the data request can be completed before rendering the view.
+    </p>
+</section>
+
+<section>
+    <h2>Adding a todo method</h2>
+
+    <p>
+        We create a method on the controller that can add todos.
+    </p>
+
+    <script id="misoTodo11" type="text/syntaxify">
+var modelType = 'home.index.todo';
+ctrl.addTodo = function(e){
+    var value = ctrl.vm.input();
+    if(value) {
+        var newTodo = new self.models.todo({
+            text: ctrl.vm.input(),
+            done: false
+        });
+        ctrl.list.push(newTodo);
+        ctrl.vm.input("");
+        db.save({type: modelType, model: newTodo}).then(function(res){
+            newTodo._id = res.result;
+        });
+    }
+    e.preventDefault();
+};
+    </script>
+    <div data-syntaxify="#misoTodo11" data-syntaxify-language="javascript"
+        data-annotations="
+        1`The model has a fully qualified name - Miso uses this to identify the model in the API|
+        2`Methods are added onto the controller object directly|
+        3`The value is retreived from a view model (that we will look at in a later slide).|
+        5`We create a new todo model.|
+        11`Save the todo using the 'db' flatfiledb API interface loaded earlier.">
+    </div>
+</section>
+
+
+
+<section>
+    <h2>View</h2>
+
+    <p>
+        We add a form for creating todos.
+    </p>
+
+    <script id="misoTodo8" type="text/syntaxify">
+return FORM({ onsubmit: ctrl.addTodo }, [
+    INPUT({ type: "text", value: ctrl.vm.input}),
+    BUTTON({ type: "submit"}, "Add")
+]);
+    </script>
+    <div data-syntaxify="#misoTodo8" data-syntaxify-language="javascript">
+    </div>
+</section>
+
+
+<section>
+    <h2>Controller view model</h2>
+
+    <p>
+        We add a "view model" that is used to keep track of the UI and toggle todos.
+    </p>
+
+    <script id="misoTodo13" type="text/syntaxify">
+ctrl.vm = {
+    remaining: function(){
+        var count = 0;
+        ctrl.list.map(function(todo) {
+            count += todo.done() ? 0 : 1;
+        });
+        return count;
+    },
+    toggle: function(todo){
+        return function() {
+            todo.done(!todo.done());
+        }
+    },
+    input: m.prop("")
+};
+    </script>
+    <div data-syntaxify="#misoTodo13" data-syntaxify-language="javascript"
+        data-annotations="
+        2`Returns how many todos are incomplete|
+        9`Toggles the completeness of a todo.|
+        14`Holds the value of the input text box
+        ">
+    </div>
+</section>
+
+
+<section data-markdown>
+    <script type="text/template">
+        ## Example: our todo app
+
+        Here is <a href="http://localhost:6477/" target="_blank">an example</a> that I prepared earlier.
+
+        We will look at the following features in this example:
+
+        * Tiny JS clientside footprint (gzip-size public/miso.js = 13kb).
+        * Optimised code (minified out-of-the-box)
+        * Live code reloading.
+    </script>
+</section>
+
+
+<section>
+    <h2>First page load</h2> 
+    <p>
+        Miso exposes a Single Page App by default - here we see what the first page load looks like
+    </p>
+    <div class="diagram">
+        Participant Client
+        Participant Mithril
+        Participant Server
+        Client-->Server: GET /todos
+        Server-->Client: HTML
+        Note over Client: Render static HTML page\n (no UI events)
+        Client->Mithril: Initialise module
+        Mithril->Server: Data query
+        Server->Mithril: Data result
+        Mithril-->Client: Render page with UI events and data
+    </div>
+
+</section>
+
+
+
+<section>
+    <h2>Client page lifecycle</h2> 
+    <p>
+        The lifecycle of the page in SPA mode runs mostly on the client side - only data is fetched from the server.
+    </p>
+    <div class="diagram">
+        Participant Client
+        Participant Mithril
+        Participant Server
+        Note over Client: At /users we click\n "edit user" link 
+        Client->Mithril: GET /user/123
+        Note over Mithril: Runs user.edit MVC component\non the client only
+        Mithril-Server: Data query
+        Server->Mithril: Data result
+        Mithril-->Client: Render the user edit page
+    </div>
+
+</section>
+
+<section>
+    <h2>This is only the beginning</h2> 
+    <p>
+        Miso is still only young, get involved1 <a href="http://misojs.com" target="_blank">http://misojs.com</a>
+    </p>
+
+    <p class="center mtop">
+        <img src="resource/img/qr_misojscom.gif"/>
+    </p>
+</section>
+
+</div>
+
+</div>
+
+<!-- Setup reveal -->
+<script src="resource/revealjs/lib/js/head.min.js"></script>
+<script src="resource/revealjs/js/reveal.js"></script>
+
+<script>
+        // Full list of configuration options available here:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: false,
+            progress: false,
+            history: true,
+            center: true,
+            // available themes are in /css/theme
+            theme: Reveal.getQueryHash().theme, 
+            transition: Reveal.getQueryHash().transition || 'default',
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: 'resource/revealjs/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                { src: 'resource/revealjs/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                { src: 'resource/revealjs/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                //  We use prism and syntaxify.
+                //{ src: 'resource/revealjs/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                { src: 'resource/revealjs/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+                { src: 'resource/revealjs/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+            ]
+        });     
+
+        // Reveal.addEventListener( 'slidechanged', function( event ) {
+        //  console.log(event.previousSlide, event.currentSlide, event.indexh, event.indexv);
+        // } );
+</script>
+
+<script>
+    //  Setup sequence diagrams
+    $(".diagram").sequenceDiagram({theme: 'hand'});
+</script>
+
+
+<script>
+    //  Muck about with the logo a little, why not :)
+    var setLogoWidth = function(){
+        var width = 40 + parseInt(Math.random() * 40, 10);
+        $('#logo,#logoEvil').css({width: width + "%"});
+    };
+
+    setInterval(setLogoWidth, 10000);
+</script>
+
+</body>
+</html> 

@@ -1,2 +1,1 @@
-# 5minutemisointro
-5 minute Miso intro for Web directions WDYK
+# Slides for miso.js 5 minute intro
